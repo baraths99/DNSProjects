@@ -8,11 +8,13 @@ class DNSQuestion:
         self.qclass = qclass
 
     def pack(self):
+        """Serializes the question into binary format"""
         packed_qname = self.pack_name(self.qname)
         return packed_qname + struct.pack('!HH', self.qtype, self.qclass)
 
     @staticmethod
     def pack_name(name):
+
         result = b''
         for part in name.split('.'):
             if part:

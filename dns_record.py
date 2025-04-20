@@ -16,14 +16,17 @@ class DNSRecord:
         self.data = data
 
     def is_expired(self):
+        """Checks if the record has expired based on its TTL"""
         return (time.time() - self.creation_time) >= self.original_ttl
 
     def get_remaining_ttl(self):
+        """Calculates the remaining TTL for the record"""
         elapsed = time.time() - self.creation_time
         remaining = self.original_ttl - elapsed
         return max(0, int(remaining))
 
     def pack(self):
+        """Serializes the record into binary format"""
         name_bytes = DNSQuestion.pack_name(self.name)
 
         if self.record_type == RecordType.A.value:
