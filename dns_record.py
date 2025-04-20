@@ -11,15 +11,16 @@ class DNSRecord:
         self.name = name
         self.record_type = record_type
         self.record_class = record_class
-        self.ttl = ttl
+        self.original_ttl = ttl
+        self.creation_time = time.time()
         self.data = data
-        self.expiry_time = time.time() + ttl
 
     def is_expired(self):
-        return time.time() > self.expiry_time
+        return (time.time() - self.creation_time) >= self.original_ttl
 
     def get_remaining_ttl(self):
-        remaining = self.expiry_time - time.time()
+        elapsed = time.time() - self.creation_time
+        remaining = self.original_ttl - elapsed
         return max(0, int(remaining))
 
     def pack(self):
@@ -35,7 +36,11 @@ class DNSRecord:
         else:
             rdata = self.data.encode('ascii')
 
+        remaining_ttl = self.get_remaining_ttl()
+        if remaining_ttl <= 0:
+            return b''
+
         return (name_bytes +
-                struct.pack('!HHI', self.record_type, self.record_class, self.get_remaining_ttl()) +
+                struct.pack('!HHI', self.record_type, self.record_class, remaining_ttl) +
                 struct.pack('!H', len(rdata)) +
                 rdata)

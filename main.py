@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import threading
 from dns_server import DNSServer
@@ -61,7 +60,6 @@ def main():
     server = DNSServer(host=args.host, port=args.port, db_file=args.db)
 
     if args.interactive:
-        # Start server in a separate thread
         server_thread = threading.Thread(target=server.start)
         server_thread.daemon = True
         server_thread.start()

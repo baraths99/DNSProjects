@@ -49,23 +49,31 @@ class DNSServer:
         try:
             header = DNSHeader.unpack(data)
             pos = 12
+
             qname, pos = self.parse_name(data, pos)
             qtype, qclass = struct.unpack('!HH', data[pos:pos + 4])
+
+            matching_records = self.db.get_records(qname, qtype)
+
             response_header = DNSHeader(
                 id=header.id,
                 flags=0x8180,
                 qdcount=1,
-                ancount=0,
+                ancount=len(matching_records),
                 nscount=0,
                 arcount=0
             )
-            matching_records = self.db.get_records(qname, qtype)
-            response_header.ancount = len(matching_records)
+
             response = response_header.pack()
+
             question = DNSQuestion(qname, qtype, qclass)
             response += question.pack()
+
             for record in matching_records:
-                response += record.pack()
+                packed_record = record.pack()
+                if packed_record:
+                    response += packed_record
+
             self.sock.sendto(response, addr)
 
         except Exception as e:
@@ -93,7 +101,6 @@ class DNSServer:
 
     def add_record(self, name, record_type_str, ttl, data):
         """Add a DNS record using string type name"""
-        # Convert string record type to enum value
         record_type_map = {
             'A': RecordType.A.value,
             'NS': RecordType.NS.value,
